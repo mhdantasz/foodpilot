@@ -1,0 +1,51 @@
+{
+  "name": "pronto-gestao",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=11.19.0 <12"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "check:ui": "node scripts/check-ui.mjs",
+    "check:ui:public": "node scripts/check-ui.mjs --public-only",
+    "test:rls": "node scripts/test-rls.mjs",
+    "test:integration": "node scripts/test-integration.mjs",
+    "check:supabase": "node scripts/check-supabase-connection.mjs",
+    "test:commerce:rls": "node scripts/test-commerce-rls.mjs",
+    "test:commerce:integration": "node scripts/test-commerce-integration.mjs",
+    "check:ui:commerce": "node scripts/check-ui-commerce.mjs",
+    "check:ui:keyboard": "node scripts/check-ui-mobile-keyboard.mjs",
+    "test:operations:rls": "node scripts/test-operations-rls.mjs",
+    "test:operations:integration": "node scripts/test-operations-integration.mjs",
+    "check:ui:operations": "node scripts/check-ui-operations.mjs",
+    "test:whatsapp": "node scripts/test-whatsapp.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.117.2",
+    "lucide-react": "1.52.0",
+    "next": "16.3.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "^22.0.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "16.3.8",
+    "tailwindcss": "4.3.3",
+    "typescript": "~5.9.3"
+  }
+}

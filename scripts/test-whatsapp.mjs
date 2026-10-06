@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { readFile,mkdir,writeFile } from 'node:fs/promises';
+import ts from 'typescript';
+const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText;
+const url=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('base64');
+const money=url(compile(await readFile('src/lib/money.ts','utf8')));
+const module=compile(await readFile('src/lib/whatsapp.ts','utf8')).replace("from './money'",`from '${money}'`);
+const {whatsappPhone,whatsappLink}=await import(url(module));
+const cases=[['(92) 99999-0000','5592999990000'],['92 3333-0000','559233330000'],['+55 (92) 99999-0000','5592999990000'],['5592999990000','5592999990000'],['005592999990000','5592999990000'],['+1 (212) 555-1234','12125551234'],['0012125551234','12125551234'],[null,null],['',null],['99999000',null],['123456',null],['https://evil.invalid',null],['+5592',null],['+00000000',null],['+551234567890123456',null]];
+for(const [input,expected] of cases)assert.equal(whatsappPhone(input),expected,input);
+const link=whatsappLink('(92) 99999-0000','João & Maria',3000);
+assert.equal(new URL(link).hostname,'wa.me');assert.equal(new URL(link).pathname,'/5592999990000');assert.ok(new URL(link).searchParams.get('text').includes('João & Maria'));assert.ok(new URL(link).searchParams.get('text').includes('R$ 30,00'));assert.equal(whatsappLink('123456','Lucas'),null);
+await mkdir('test-results',{recursive:true});await writeFile('test-results/whatsapp-report.json',JSON.stringify({complete:true,phoneCases:cases.length,linkCases:5,automaticSending:false},null,2));console.log('20 verificações de telefone, URL e texto passaram. Nenhuma mensagem enviada.');

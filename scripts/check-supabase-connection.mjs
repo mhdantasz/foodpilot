@@ -1,0 +1,10 @@
+import { loadTestEnvironment } from './test-env.mjs';
+loadTestEnvironment();
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+if (!url || !key) throw new Error('Configure URL e chave pública em .env.local.');
+if (key.startsWith('sb_secret_')) throw new Error('Use somente uma chave pública.');
+const response = await fetch(new URL('/auth/v1/settings',url), { headers: { apikey:key }, signal:AbortSignal.timeout(15000) });
+if (!response.ok) throw new Error(`Supabase Auth não confirmou a conexão: HTTP ${response.status}. Valores de credenciais não são exibidos.`);
+const settings = await response.json();
+console.log(JSON.stringify({ connection:'ok', httpStatus:response.status, emailAuthEnabled:settings.external?.email ?? null, signupEnabled:settings.disable_signup === false, emailAutoConfirm:settings.mailer_autoconfirm ?? null, schemaApplied:'não verificado; nenhuma alteração remota executada' }));
