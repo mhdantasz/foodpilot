@@ -1,0 +1,19 @@
+'use client';
+import { startTransition,useRef,useState } from 'react';
+import { cancelSale } from './actions';
+import { formatMoney } from '@/lib/money';
+import { formatBusinessDate } from '@/lib/business-time';
+import type { SaleBalance } from '@/types/database';
+import { PaymentForm } from './payment-form';
+export function SaleFinancialSummary({sale,timezone,owner}:{sale:SaleBalance;timezone:string;owner:boolean}){
+ const [confirmed,setConfirmed]=useState<SaleBalance|null>(null);const current=confirmed&&confirmed.updated_at>sale.updated_at?confirmed:sale;
+ return <><section className="section-card commerce-form"><h2>Resumo original</h2><dl className="settings-list"><dt>Valor da venda</dt><dd>{formatMoney(current.total_cents)}</dd><dt>Custo original</dt><dd>{formatMoney(current.cost_total_cents)}</dd><dt>Lucro bruto original</dt><dd>{formatMoney(current.profit_cents)}</dd><dt>Total pago</dt><dd>{formatMoney(current.paid_cents)}</dd><dt>Valor devolvido</dt><dd>{formatMoney(current.refunded_cents)}</dd><dt>Saldo pendente</dt><dd>{formatMoney(current.balance_cents)}</dd></dl>{current.status==='active'&&current.customer_id&&current.balance_cents>0&&<PaymentForm customerId={current.customer_id} saleId={current.id} balance={current.balance_cents}/>}</section>{(owner||current.status==='cancelled')&&<CancelSale sale={current} timezone={timezone} onCancelled={setConfirmed}/>}</>;
+}
+function CancelSale({sale:current,timezone,onCancelled}:{sale:SaleBalance;timezone:string;onCancelled:(sale:SaleBalance)=>void}) {
+ const [open,setOpen]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');const lock=useRef(false);
+ if(current.status==='cancelled')return <section className="section-card commerce-form" role="status"><h2>Venda cancelada</h2><p>{formatBusinessDate(current.cancelled_at!,timezone)} · {current.cancellation_reason}</p><p>Valor devolvido: {formatMoney(current.refunded_cents)}. Itens e recibos originais permanecem no histórico. Esta venda não entra nos resultados nem no fiado.</p></section>;
+ return <section className="section-card commerce-form"><h2>Corrigir uma venda</h2><p>Se registrou dados errados, cancele esta venda e registre uma nova. O histórico será preservado.</p><button className="action-button secondary" onClick={()=>setOpen(!open)}>Cancelar venda</button>{open&&<form aria-label="Cancelar venda" className="commerce-form" onSubmit={event=>{
+  event.preventDefault();if(lock.current)return;lock.current=true;setBusy(true);setError('');const data=new FormData(event.currentTarget);
+  startTransition(async()=>{try{const result=await cancelSale(current.id,String(data.get('reason')),data.get('refund')==='on');if(result.error)setError(result.error);else if(result.sale){onCancelled(result.sale);setOpen(false);}}catch{setError('Não foi possível confirmar. Confira o histórico antes de repetir.');}finally{lock.current=false;setBusy(false);}});
+ }}><fieldset disabled={busy}><label>Motivo do cancelamento<textarea name="reason" required minLength={5} maxLength={500} autoFocus/></label>{current.paid_cents>0&&<><p>Já foram recebidos {formatMoney(current.paid_cents)}. Devolva o valor ao cliente antes de confirmar. O aplicativo não movimenta dinheiro em banco/cartão.</p><label className="check-label"><input type="checkbox" name="refund" required/>Confirmo que devolvi o valor recebido ao cliente.</label></>}<p>Esta ação é definitiva. A venda ficará cancelada no histórico.</p>{error&&<p role="alert" className="form-message error">{error}</p>}<div className="commerce-actions"><button className="action-button" type="submit">{busy?'Cancelando…':'Confirmar cancelamento da venda'}</button><button className="action-button secondary" type="button" onClick={()=>setOpen(false)}>Manter venda</button></div></fieldset></form>}</section>;
+}

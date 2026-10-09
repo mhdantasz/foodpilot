@@ -25,7 +25,14 @@
     "test:operations:rls": "node scripts/test-operations-rls.mjs",
     "test:operations:integration": "node scripts/test-operations-integration.mjs",
     "check:ui:operations": "node scripts/check-ui-operations.mjs",
-    "test:whatsapp": "node scripts/test-whatsapp.mjs"
+    "test:whatsapp": "node scripts/test-whatsapp.mjs",
+    "test:v1:rls": "node scripts/test-v1-rls.mjs",
+    "test:v1:integration": "node scripts/test-v1-integration.mjs",
+    "test:csv": "node scripts/test-csv.mjs",
+    "check:ui:v1": "node scripts/check-ui-v1.mjs",
+    "icons:generate": "node scripts/generate-icons.mjs",
+    "check:pwa": "node scripts/check-pwa.mjs",
+    "check:ui:safe-areas": "node scripts/check-ui-safe-areas.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",

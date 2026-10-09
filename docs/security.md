@@ -2,7 +2,7 @@
 
 ## Superfície implementada
 
-Somente profiles, businesses e business_members. RLS está habilitada nas três tabelas na migration versionada. Anon não possui SELECT ou escrita. Authenticated pode ler seu profile, suas próprias memberships e negócios associados. O frontend não é o limite de segurança.
+Quatorze tabelas, com RLS e grants explícitos. O núcleo de identidade descrito abaixo mantém suas regras: anon não possui SELECT ou escrita; authenticated lê o próprio profile, memberships e negócios associados. As seções comerciais/operacionais descrevem as extensões. O frontend não é o limite de segurança.
 
 | Recurso | SELECT | UPDATE | INSERT / DELETE |
 | --- | --- | --- | --- |
@@ -84,3 +84,27 @@ SQL/RLS, ataques diretos pela API com dois JWTs, FKs como administrador, snapsho
 Advisor após migration: sem novo aviso de RLS, FKs ou funções de venda expostas. Permanecem o [onboarding definer intencional](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable) da Fase 2 e a [proteção contra senhas vazadas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) desabilitada no plano/configuração. Índices ainda não usados são INFO em banco pequeno; mantidos para FKs e consultas previstas. Não há necessidade de serviço pago para validar o núcleo comercial.
 
 Referências: [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [sessões SSR](https://supabase.com/docs/guides/auth/server-side/advanced-guide), [PGlite](https://pglite.dev/docs/).
+
+## Operação financeira da Fase 4
+
+payments, reservations, reservation_items e expenses habilitam RLS imediatamente, revogam grants automáticos e concedem SELECT a authenticated somente quando business_id pertence à membership do usuário. Sem grants de INSERT/UPDATE/DELETE diretos. A view sale_balances usa security_invoker=true, portanto também respeita RLS em sales/payments. Não existe USING(true) ou metadata editável como autorização.
+
+RPCs públicas record_payment/create_reservation/change_reservation/save_expense são invoker. Funções em commerce_private, schema não exposto no PostgREST, são definer apenas para executar as transações fechadas: auth.uid não nulo, membership atual ordenada, objetos qualificados, search_path vazio, validações e EXECUTE restrito. Nenhuma service_role no app. FKs compostas impedem vínculos cruzados de cliente/venda/pagamento/reserva/variante/local mesmo como administrador.
+
+Pagamentos usam lock por chave, cliente e vendas ordenadas; validam saldo no banco e comparam payload em retries. Conversão bloqueia a reserva, copia snapshots e registra uma única venda/recibo/vínculo atomicamente. Pagamento não pode superar saldo. Requisições concorrentes foram validadas por Auth/PostgREST real; PGlite testa regras/rollback, mas possui uma conexão e não prova concorrência HTTP.
+
+Novos checks: pnpm test:operations:rls (42 verificações), pnpm test:operations:integration (34), pnpm test:whatsapp (20) e pnpm check:ui:operations (126). Cobrem A/B, UUID direto, SELECT, escrita indevida, pagamento/quitacão/conversão/edição alheios, referências cruzadas, saldo parcial/final, idempotência, concorrência e métricas. Fluxo UI financeiro completo em seis larguras, sem edição manual de banco. Relatórios e credenciais ficam somente nos arquivos ignorados de teste.
+
+Migrations 20261006080801 e 20261006081925 aplicadas; arquivos anteriores intactos. Advisor após DDL: sem novos avisos de exposição/RLS; índices completos de FKs corrigidos, INFO de índices novos sem uso aceitável. Permanecem [onboarding definer intencional](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable) e [proteção contra senhas vazadas desabilitada](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) da configuração anterior. Veja phase-4-delivery.md para evidências, restrições e configurações externas.
+
+## Segurança operacional — Fase 5
+
+Migration 20261006215613_personal_v1 aplicada sem apagar registros. RLS/grants anteriores preservados; sale_balances continua invoker. Cancelamento usa RPC invoker pública e função privada definer com search_path vazio, auth.uid/owner/negócio atual verificados, sem confiar em metadata editável. Os locks de cliente/venda seguem a ordem do pagamento. Auditoria registra UUID do responsável, instante, motivo e devolução exata dos recibos; venda/itens/payments não são apagados. Retry igual preserva a primeira auditoria. Não existe endpoint de edição de histórico nem chave administrativa no navegador.
+
+Exportações exigem contexto SSR; parâmetros de URL não escolhem tenant. RLS mais filtro server-side limitam todas as consultas. CSV neutraliza fórmulas em texto e recebe private/no-store; SW não guarda CSV/dados/sessões. A página offline é pública e não contém informação de usuário. Arquivos exportados e backups contêm dados pessoais e devem ficar privados; não há importador CSV/restauração implementado.
+
+Configurações permite apenas editar o próprio profile e nome do negócio por owner; moeda/fuso read-only evitam reinterpretar histórico. Headers adicionam nosniff, frame DENY, referrer policy e bloqueio de câmera/microfone/geolocalização que não são usados nesta V1. Não foi introduzida CSP ampla que quebraria o runtime Next; SW/offline possuem políticas próprias.
+
+Testes novos: test:v1:rls (14, inclusive owner/member/anon, valores antigos e estorno em outro dia), test:v1:integration (7 no Supabase real, concorrência e isolamento A/B), test:csv (encoding/aspas/fórmulas) e check:ui:v1 (duas sessões independentes, offline/cache/CSV/cancelamento/configurações/renovação). Executar somente com contas dedicadas em desenvolvimento. test-results/ e credenciais ficam ignorados.
+
+Advisor depois da DDL preservou os dois avisos anteriores: [complete_onboarding definer intencional](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable) e [proteção de senhas vazadas desabilitada](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection). Nenhuma tabela sem RLS/view privilegiada nova. Performance mantém INFO de índices ainda sem uso; não há FK sem índice apontada. Backup/restauração e requisitos antes do uso comercial estão em [deployment.md](deployment.md).

@@ -39,15 +39,23 @@ export const peopleData = cache(async () => {
   ]);
   return { customers, locations, summaries };
 });
+export const salesPeople = cache(async () => {
+  const {client,business}=await commerceContext();
+  const [customers,locations]=await Promise.all([
+    allPages((from,to)=>client.from('customers').select('id,name').eq('business_id',business.id).order('id').range(from,to)),
+    allPages((from,to)=>client.from('locations').select('id,name').eq('business_id',business.id).order('id').range(from,to)),
+  ]);
+  return {customers,locations};
+});
 export async function metrics(period = 'today', customerId: string | null = null) {
   const { client } = await commerceContext();
   const result = await client.rpc('sales_metrics', { p_period: period, p_customer_id: customerId });
   if (result.error) throw new Error('Não foi possível carregar os resultados.');
   return result.data as Metrics;
 }
-export async function salesData(period: string, customerId?: string, page = 0) {
+export async function salesData(period: string, customerId?: string, page = 0, limit = 50) {
   const { client, business } = await commerceContext();
-  let query = client.from('sales').select('*', { count: 'exact' }).eq('business_id', business.id).order('sold_at', { ascending: false }).order('id').range(page * 50, page * 50 + 49);
+  let query = client.from('sales').select('*', { count: 'exact' }).eq('business_id', business.id).order('sold_at', { ascending: false }).order('id').range(page * limit, page * limit + limit - 1);
   if (customerId) query = query.eq('customer_id', customerId);
   if (period !== 'all') {
     const { data, error } = await client.rpc('sales_period', { p_period: period });

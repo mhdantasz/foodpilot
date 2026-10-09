@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { integrationConfig } from './test-env.mjs';
 const config=integrationConfig(); if(!config) throw new Error('Configure as contas de teste.');
 const email=process.env.TEST_UI_EMAIL||config.aEmail,password=process.env.TEST_UI_PASSWORD||config.aPassword;
-const base=process.env.BASE_URL||'http://localhost:3001', widths=[375,390,430,1280,1440,1920], results=[], errors=[];
+const base=process.env.BASE_URL||'http://localhost:3001', widths=[375,390,430,768,1280,1440,1920], results=[], errors=[];
 const api=createClient(config.url,config.key,{auth:{persistSession:false,autoRefreshToken:false}});
 const login=await api.auth.signInWithPassword({email,password}); assert.equal(login.error,null);
 const businessResult=await api.rpc('current_business_id');assert.equal(businessResult.error,null);const business=businessResult.data;
@@ -35,7 +35,7 @@ try {
     const foreignRoutes=[`/clientes/${foreignCustomer}`,`/vendas/${foreignSale}`];
     page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{const expected404=foreignRoutes.some(r=>base+r===m.location().url)&&/status of 404/.test(m.text());if(m.type()==='error'&&!expected404) errors.push(m.text());});
     for(const route of ['/vendas/nova','/categorias','/locais',...foreignRoutes]) { await page.goto(base+route);assert.equal(new URL(page.url()).pathname,'/login');results.push({width,flow:'rota nova sem sessão protegida: '+route.split('/')[1]}); }
-    await page.goto(base+'/login');await page.getByLabel('Email',{exact:true}).fill(email);await page.getByLabel('Senha',{exact:true}).fill(password);await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(base+'/');
+    await page.goto(base+'/login');await page.getByLabel('Email',{exact:true}).fill(email);await page.getByLabel('Senha',{exact:true}).fill(password);await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.waitForURL(base+'/');await page.getByRole('heading',{name:'Hoje',exact:true}).waitFor();
     for(const route of foreignRoutes) { await page.goto(base+route);await page.getByRole('heading',{name:'Essa página não foi encontrada.',exact:true}).waitFor();await state(page,width,'UUID alheio não abre detalhe: '+route.split('/')[1]); }
     const suffix=`${width}-${randomUUID().slice(0,6)}`, product=`Bolo de pote ${width===375?'N'.repeat(40)+' ':''}${suffix}`, customer=`Cliente ${width===375?'C'.repeat(50)+' ':''}${suffix}`, category=`Doces ${suffix}`, location=`Escola ${suffix}`;
     await simple(page,'categorias',category);await state(page,width,'categoria criada');

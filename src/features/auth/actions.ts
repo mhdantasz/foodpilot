@@ -20,6 +20,7 @@ export async function login(_state: FormState, data: FormData): Promise<FormStat
   const client = await createClient();
   if (!client) return unavailable;
   const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error && (!error.status || error.status>=500 || error.name==='AuthRetryableFetchError')) return {error:'Não foi possível conectar agora. Confira sua conexão e tente novamente.'};
   if (error) return { error: error.code === 'email_not_confirmed' ? 'Confirme seu email antes de entrar. Veja sua caixa de entrada.' : 'Email ou senha incorretos. Tente novamente.' };
   revalidatePath('/', 'layout');
   redirect('/');

@@ -46,7 +46,7 @@ export function SaleComposer({ products, variants, categories, customers, locati
         </fieldset>
         {newCustomer && <SimpleEditor kind="customers" onCancel={() => setNewCustomer(false)} onSaved={id => { setQuickCustomer(id); setCustomerId(id); setNewCustomer(false); }} />}
         {error && <p role="alert" className="form-message error">{error}</p>}
-        <div className="sale-finalize"><div><span>Total</span><strong data-testid="sale-total">{formatMoney(total)}</strong></div><button type="button" className="action-button" disabled={busy || !entries.length || newCustomer} onClick={async () => {
+        <div className="sale-finalize"><div><span>Total</span><strong data-testid="sale-total">{formatMoney(total)}</strong></div><button data-write type="button" className="action-button" disabled={busy || !entries.length || newCustomer} onClick={async () => {
           if (lock.current || !entries.length) return; lock.current = true; setBusy(true); setError('');
           try {
             const common={ requestId: request.current, items: entries.map(e => ({ variant_id: e.variant.id, quantity: e.quantity })), customerId, locationId, notes };

@@ -6,7 +6,7 @@ export type Product = TenantRow & { category_id: string | null; description: str
 export type Variant = TenantRow & { product_id: string; sale_price_cents: number; cost_price_cents: number };
 export type Customer = TenantRow & { phone: string | null; notes: string | null };
 export type Location = TenantRow;
-export type Sale = { id: string; business_id: string; customer_id: string | null; location_id: string | null; request_id: string; request_payload: Json; subtotal_cents: number; total_cents: number; cost_total_cents: number; profit_cents: number; payment_method: 'pix' | 'cash' | 'card' | 'credit' | 'other'; payment_status: 'paid' | 'pending' | 'partially_paid'; notes: string | null; sold_at: string; created_at: string; updated_at: string };
+export type Sale = { status: 'active' | 'cancelled'; cancelled_at: string | null; cancelled_by: string | null; cancellation_reason: string | null; refunded_cents: number; id: string; business_id: string; customer_id: string | null; location_id: string | null; request_id: string; request_payload: Json; subtotal_cents: number; total_cents: number; cost_total_cents: number; profit_cents: number; payment_method: 'pix' | 'cash' | 'card' | 'credit' | 'other'; payment_status: 'paid' | 'pending' | 'partially_paid'; notes: string | null; sold_at: string; created_at: string; updated_at: string };
 export type SaleBalance = Sale & { paid_cents: number; balance_cents: number };
 export type Payment = { id: string; business_id: string; customer_id: string | null; sale_id: string; request_id: string; request_payload: Json; amount_cents: number; payment_method: 'pix' | 'cash' | 'card' | 'other'; paid_at: string; notes: string | null; created_at: string };
 export type Reservation = { id: string; business_id: string; customer_id: string; location_id: string | null; request_id: string; request_payload: Json; scheduled_for: string; status: 'reserved' | 'prepared' | 'delivered' | 'converted' | 'cancelled'; total_cents: number; cost_total_cents: number; converted_sale_id: string | null; conversion_method: Sale['payment_method'] | null; notes: string | null; created_at: string; updated_at: string };
@@ -43,6 +43,7 @@ export type Database = { public: {
     complete_onboarding: { Args: { p_name: string; p_business_type: string; p_sales_channel: string }; Returns: string };
     save_product: { Args: { p_id: string | null; p_name: string; p_category_id: string | null; p_description: string | null; p_active: boolean; p_variants: Json }; Returns: string };
     create_sale: { Args: { p_request_id: string; p_items: Json; p_customer_id?: string | null; p_location_id?: string | null; p_payment_method?: string; p_notes?: string | null }; Returns: string };
+    cancel_sale: { Args: { p_id: string; p_reason: string; p_refund_confirmed?: boolean }; Returns: string };
     current_business_id: { Args: Record<string, never>; Returns: string };
     sales_period: { Args: { p_period: string; p_anchor?: string }; Returns: { starts_at: string; ends_at: string }[] };
     sales_metrics: { Args: { p_period?: string; p_customer_id?: string | null; p_anchor?: string }; Returns: Json };

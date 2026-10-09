@@ -4,7 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { checkAuthenticatedUI } from './check-ui-authenticated.mjs';
 const base = process.env.BASE_URL || 'http://localhost:3000';
 const publicOnly = process.argv.includes('--public-only');
-const widths = [375,390,430,1280,1440,1920];
+const widths = [375,390,430,768,1280,1440,1920];
 const privateRoutes = ['/','/vendas','/clientes','/produtos','/fiados','/reservas','/despesas','/analises','/configuracoes','/onboarding'];
 const errors = []; const results = [];
 await mkdir('test-results',{ recursive:true });
@@ -60,7 +60,7 @@ try {
   const authenticated = publicOnly ? { complete:false, reason:'Modo público solicitado; fluxos reais não executados.' } : await checkAuthenticatedUI(browser,base,widths,errors);
   assert.deepEqual(errors,[],'Erros no navegador');
   await writeFile(publicOnly ? 'test-results/ui-public-report.json' : 'test-results/ui-report.json',JSON.stringify({ publicChecks:results, anonymousRedirects:widths.length*privateRoutes.length, errors, authenticated, complete:authenticated.complete },null,2));
-  console.log(`OK: telas públicas em ${widths.length} larguras, validações, carregamento, 60 redirecionamentos privados e 404.`);
+  console.log(`OK: telas públicas em ${widths.length} larguras, validações, carregamento, ${widths.length*privateRoutes.length} redirecionamentos privados e 404.`);
   if (!authenticated.complete) {
     console.log(`PENDENTE: ${authenticated.reason}`);
     if (!publicOnly) process.exitCode=1;

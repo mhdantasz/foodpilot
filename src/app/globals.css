@@ -322,3 +322,17 @@ button:disabled { cursor: wait; opacity: .6; }
  .operation-table th,.operation-table td { padding:12px 8px; }
 }
 
+
+.connection-banner { position: sticky; top: 0; z-index: 90; background: var(--warning-soft); color: var(--color-ink); padding: calc(12px + env(safe-area-inset-top)) 18px 12px; text-align: center; line-height: 1.5; }
+@media (display-mode: standalone) { .topbar { padding-top: env(safe-area-inset-top); height: calc(69px + env(safe-area-inset-top)); } }
+@media (display-mode: standalone) and (max-width: 1023px) {
+ .topbar { padding-left: calc(25px + env(safe-area-inset-left)); padding-right: calc(25px + env(safe-area-inset-right)); }
+ .responsive-container { padding-left: calc(25px + env(safe-area-inset-left)); padding-right: calc(25px + env(safe-area-inset-right)); }
+ .mobile-navigation { padding-left: calc(6px + env(safe-area-inset-left)); padding-right: calc(6px + env(safe-area-inset-right)); }
+ .quick-sale { right: calc(20px + env(safe-area-inset-right)); }
+}
+@media (display-mode: standalone) and (max-width: 639px) {
+ .topbar { padding-left: calc(18px + env(safe-area-inset-left)); padding-right: calc(18px + env(safe-area-inset-right)); }
+ .responsive-container { padding-left: calc(17px + env(safe-area-inset-left)); padding-right: calc(17px + env(safe-area-inset-right)); }
+}
+

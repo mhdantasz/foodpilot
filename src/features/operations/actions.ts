@@ -4,9 +4,15 @@ import { commerceContext } from '@/features/commerce/data';
 import { brlToCents } from '@/lib/money';
 import type { Result } from '@/features/commerce/actions';
 import type { PostgrestError } from '@supabase/supabase-js';
+import type { Reservation,SaleBalance } from '@/types/database';
 const uuid=(id:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 function failed(error:PostgrestError):Result{return {error:error.code==='22023'?error.message:'Não foi possível confirmar. Tente novamente com os mesmos dados para verificar o registro.'};}
 function changed(){revalidatePath('/','layout');}
+export async function cancelSale(id:string,reason:string,refundConfirmed:boolean):Promise<Result & {sale?:SaleBalance}>{
+ const {client}=await commerceContext();
+ if(!uuid(id)||typeof reason!=='string'||reason.trim().length<5||reason.length>500||typeof refundConfirmed!=='boolean')return {error:'Informe o motivo do cancelamento, entre 5 e 500 caracteres.'};
+ try{const r=await client.rpc('cancel_sale',{p_id:id,p_reason:reason.trim(),p_refund_confirmed:refundConfirmed});if(r.error)return failed(r.error);const saved=await client.from('sale_balances').select('*').eq('id',id).single();if(saved.error)return {error:'A confirmação não chegou. Confira o histórico antes de repetir.'};changed();return {id:r.data!,sale:saved.data};}catch{return {error:'Não foi possível confirmar. Confira o histórico antes de repetir.'};}
+}
 export async function recordPayment(input:{requestId:string;customerId:string;saleId?:string;amount:string;method:string;notes:string}):Promise<Result>{
  const {client}=await commerceContext();
  try{
@@ -27,10 +33,10 @@ export async function createReservation(input:{requestId:string;items:{variant_i
   changed();return {id:r.data!,total:saved.data.total_cents};
  }catch{return {error:'Não foi possível confirmar a reserva. Repita com os mesmos dados para verificar.'};}
 }
-export async function changeReservation(id:string,status:string,method?:string):Promise<Result>{
+export async function changeReservation(id:string,status:string,method?:string):Promise<Result & { reservation?: Reservation }>{
  const {client}=await commerceContext();
  if(!uuid(id)||!['prepared','delivered','cancelled','converted'].includes(status)||(status==='converted'&&!['pix','cash','card','credit','other'].includes(method??'')))return {error:'Revise a reserva e a forma de pagamento.'};
- try{const r=await client.rpc('change_reservation',{p_id:id,p_status:status,p_method:method??null});if(r.error)return failed(r.error);changed();return {id:r.data!};}catch{return {error:'Não foi possível confirmar. Tente novamente; a conversão não duplica a venda.'};}
+ try{const r=await client.rpc('change_reservation',{p_id:id,p_status:status,p_method:method??null});if(r.error)return failed(r.error);const saved=await client.from('reservations').select('*').eq('id',id).single();if(saved.error)return {error:'A confirmação não chegou. Recarregue para verificar o estado da reserva antes de repetir.'};changed();return {id:r.data!,reservation:saved.data};}catch{return {error:'Não foi possível confirmar. Tente novamente; a conversão não duplica a venda.'};}
 }
 export async function saveExpense(input:{requestId:string;id?:string;description:string;category:string;amount:string;day:string;notes:string}):Promise<Result>{
  const {client}=await commerceContext();

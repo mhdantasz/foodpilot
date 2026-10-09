@@ -3,7 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { commerceContext } from './data';
 import { brlToCents } from '@/lib/money';
 import type { PostgrestError } from '@supabase/supabase-js';
-export type Result = { error?: string; id?: string; total?: number };
+import type { Customer, TenantRow } from '@/types/database';
+export type Result = { error?: string; id?: string; total?: number; record?: TenantRow | Customer };
 const uuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 function name(value: string) { const normalized = value.trim().replace(/\s+/g, ' '); if (!normalized || normalized.length > 100) throw new Error('Informe um nome de até 100 caracteres.'); return normalized; }
 function optional(value: string, max = 2000) { const text = value.trim(); if (text.length > max) throw new Error(`Use até ${max} caracteres.`); return text || null; }
@@ -25,12 +26,12 @@ export async function saveSimple(kind: 'customers' | 'categories' | 'locations',
       const phone = optional(input.phone ?? '', 30)?.replace(/[\s().-]/g, '') ?? null;
       if (phone && !/^\+?\d{6,20}$/.test(phone)) throw new Error('Informe um telefone válido, com DDD quando necessário.');
       const values = { ...common, phone, notes: optional(input.notes ?? '') };
-      result = input.id ? await client.from('customers').update(values).eq('id', input.id).eq('business_id', business.id).select('id').single() : await client.from('customers').insert({ ...values, business_id: business.id }).select('id').single();
+      result = input.id ? await client.from('customers').update(values).eq('id', input.id).eq('business_id', business.id).select('*').single() : await client.from('customers').insert({ ...values, business_id: business.id }).select('*').single();
     } else {
-      result = input.id ? await client.from(kind).update(common).eq('id', input.id).eq('business_id', business.id).select('id').single() : await client.from(kind).insert({ ...common, business_id: business.id }).select('id').single();
+      result = input.id ? await client.from(kind).update(common).eq('id', input.id).eq('business_id', business.id).select('*').single() : await client.from(kind).insert({ ...common, business_id: business.id }).select('*').single();
     }
     if (result.error) return failure(result.error);
-    changed(); return { id: result.data!.id };
+    changed(); return { id: result.data!.id, record: result.data! };
   } catch (error) { return { error: error instanceof Error ? error.message : 'Revise os dados.' }; }
 }
 export async function saveProduct(input: { id?: string; name: string; categoryId: string; description: string; active: boolean; variants: { id?: string; name: string; price: string; cost: string; active: boolean }[] }): Promise<Result> {
@@ -51,9 +52,9 @@ export async function saveProduct(input: { id?: string; name: string; categoryId
 export async function toggleProduct(id: string, active: boolean): Promise<Result> {
   const { client, business } = await commerceContext();
   if (!uuid(id) || typeof active !== 'boolean') return { error: 'Produto inválido.' };
-  const result = await client.from('products').update({ active }).eq('business_id', business.id).eq('id', id).select('id').single();
+  const result = await client.from('products').update({ active }).eq('business_id', business.id).eq('id', id).select('*').single();
   if (result.error) return failure(result.error);
-  changed(); return { id };
+  changed(); return { id, record: result.data! };
 }
 export async function createSale(input: { requestId: string; items: { variant_id: string; quantity: number }[]; customerId: string; locationId: string; payment: string; notes: string }): Promise<Result> {
   const { client } = await commerceContext();
@@ -62,8 +63,9 @@ export async function createSale(input: { requestId: string; items: { variant_id
   try {
     const result = await client.rpc('create_sale', { p_request_id: input.requestId, p_items: input.items.map(i => ({ variant_id: i.variant_id, quantity: i.quantity })), p_customer_id: input.customerId || null, p_location_id: input.locationId || null, p_payment_method: input.payment, p_notes: optional(input.notes) });
     if (result.error) return failure(result.error);
-    const saved = await client.from('sales').select('total_cents').eq('id', result.data!).single();
+    const saved = await client.from('sales').select('total_cents,status').eq('id', result.data!).single();
     if (saved.error) return { error: 'A confirmação não chegou. Tente novamente para verificar a mesma venda.' };
+    if (saved.data.status==='cancelled') return { error: 'Esta tentativa corresponde a uma venda já cancelada. Inicie uma nova venda.' };
     changed(); return { id: result.data!, total: saved.data.total_cents };
   } catch { return { error: 'Não foi possível confirmar a venda. Tente novamente; a mesma tentativa não duplica a venda.' }; }
 }
