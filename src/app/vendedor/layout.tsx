@@ -6,6 +6,9 @@ import { SessionSync } from '@/components/session-sync';
 import { LogoutButton } from '@/features/auth/auth-form';
 import { InstallApp } from '@/components/install-app';
 import '@/components/sellers/sellers.css';
+import { sellerAppName } from '@/config/branding';
+
+export const metadata = { applicationName: sellerAppName, manifest: '/vendedor/manifest.webmanifest', appleWebApp: { capable: true, title: sellerAppName, statusBarStyle: 'default' as const } };
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +22,7 @@ export default async function VendedorLayout({ children }: { children: ReactNode
       <SessionSync />
       <header className="seller-header">
         <div className="seller-header-inner">
-          <Brand href="/vendedor" />
+          <Brand href="/vendedor" name={sellerAppName} />
 
           <div className="seller-user-badge">
             <div className="seller-user-info">
@@ -40,13 +43,13 @@ export default async function VendedorLayout({ children }: { children: ReactNode
           {children}
 
           <div className="seller-footer-install">
-            <InstallApp />
+            <InstallApp name={sellerAppName} />
           </div>
         </div>
       </main>
 
       <footer className="seller-footer">
-        <p>Pronto · Painel de Vendas Externas</p>
+        <p>{sellerAppName} · Painel de Vendas Externas</p>
       </footer>
     </div>
   );

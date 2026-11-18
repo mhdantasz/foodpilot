@@ -151,9 +151,6 @@ export function SellerSaleForm({ offers }: { offers: SellerOffer[] }) {
                     {offer.product_name} · {offer.variant_name}
                   </strong>
                   <div className="seller-offer-price">{formatMoney(offer.price_cents)}</div>
-                  <div className="seller-offer-commission">
-                    Sua comissão: {formatMoney(offer.commission_cents)} / un
-                  </div>
                 </div>
 
                 <div className="seller-quantity-bar">
@@ -239,7 +236,7 @@ export function SellerSaleForm({ offers }: { offers: SellerOffer[] }) {
           </fieldset>
 
           <div className="seller-machine-notice">
-            Atenção: O Food Pilot registra o lançamento da venda, mas <strong>não confirma transações bancárias nem da maquininha</strong>. Certifique-se de receber o dinheiro ou aguardar a aprovação na maquininha antes de entregar o produto.
+            Atenção: O MD Seller registra o lançamento da venda, mas <strong>não confirma transações bancárias nem da maquininha</strong>. Certifique-se de receber o dinheiro ou aguardar a aprovação na maquininha antes de entregar o produto.
           </div>
 
           <button

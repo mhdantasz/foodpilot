@@ -10,7 +10,7 @@ import { SellerHistory } from '@/components/sellers/seller-history';
 import { ShieldAlert } from 'lucide-react';
 
 export const metadata = {
-  title: 'Painel do Vendedor',
+  title: { absolute: 'MD Seller' },
 };
 
 export const dynamic = 'force-dynamic';

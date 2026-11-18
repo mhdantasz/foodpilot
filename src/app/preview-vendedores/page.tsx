@@ -8,9 +8,15 @@ import { DateFilter } from '@/components/sellers/date-filter';
 import { AppShell } from '@/components/app-shell';
 import type { TeamDashboard } from '@/lib/sellers/types';
 import '@/components/sellers/sellers.css';
+import { Brand } from '@/components/brand';
+import { sellerAppName, branding } from '@/config/branding';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Prévia local de vendedores', robots: { index: false, follow: false } };
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+  const seller = (await searchParams).view === 'seller';
+  const name = seller ? sellerAppName : branding.appName;
+  return { title: { absolute: name }, applicationName: name, manifest: seller ? '/vendedor/manifest.webmanifest' : '/manifest.webmanifest', appleWebApp: { capable: true, title: name }, robots: { index: false, follow: false } };
+}
 
 // Development-only fixtures, never inserted into a database or available in production.
 export default async function SellerPreview({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
@@ -33,5 +39,5 @@ export default async function SellerPreview({ searchParams }: { searchParams: Pr
   const sellerView = (await searchParams).view === 'seller';
   const notice = <div className="form-message info" style={{ marginBottom: 20 }}><strong>Prévia local com dados de exemplo.</strong> Nenhuma venda desta tela está no banco. <Link href="/preview-vendedores">Ver gerente</Link> · <Link href="/preview-vendedores?view=seller">Ver vendedor</Link></div>;
   if (!sellerView) return <AppShell businessName="Operação de exemplo" userName="Gerente"><h1 style={{ marginBottom: 16 }}>Equipe de vendedores</h1>{notice}<DateFilter {...{ from: dashboard.period.from, to: dashboard.period.to, calendarDays: 7, timezone: dashboard.period.timezone }} /><TeamView dashboard={dashboard} /></AppShell>;
-  return <div className="seller-app"><main className="seller-main"><div className="seller-container">{notice}<h1 style={{ marginBottom: 20 }}>Olá, vendedor</h1><SellerSaleForm offers={dashboard.offers} /><SellerMetricsCard metric={metric} period={dashboard.period} products={dashboard.products} /><SellerHistory sales={dashboard.sales} weeks={dashboard.weeks} /></div></main></div>;
+  return <div className="seller-app"><header className="seller-header"><div className="seller-header-inner"><Brand href="/preview-vendedores?view=seller" name={sellerAppName} /></div></header><main className="seller-main"><div className="seller-container">{notice}<h1 style={{ marginBottom: 20 }}>Olá, vendedor</h1><SellerSaleForm offers={dashboard.offers} /><SellerMetricsCard metric={metric} period={dashboard.period} products={dashboard.products} /><SellerHistory sales={dashboard.sales} weeks={dashboard.weeks} /></div></main></div>;
 }
