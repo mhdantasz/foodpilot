@@ -18,7 +18,7 @@ async function count(table) { return Number((await db.query(`select count(*) fro
 async function denied(task, code='42501') { await assert.rejects(task,error=>error.code===code); }
 const sale = (items, options={}) => db.query('select public.create_sale($1,$2::jsonb,$3,$4,$5,$6) as id',[options.key ?? randomUUID(),JSON.stringify(items),options.customer ?? null,options.location ?? null,options.payment ?? 'pix',options.notes ?? null]);
 try {
-  await db.exec(`create role anon; create role authenticated; create schema auth; create table auth.users(id uuid primary key,raw_user_meta_data jsonb);
+  await db.exec(`create role anon; create role authenticated;create role service_role; create schema auth; create table auth.users(id uuid primary key,raw_user_meta_data jsonb);
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     grant usage on schema auth,public to authenticated,anon; grant execute on function auth.uid() to authenticated,anon;`);
   for(const f of (await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort()) await db.exec(await readFile('supabase/migrations/'+f,'utf8'));

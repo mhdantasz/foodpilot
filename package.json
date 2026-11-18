@@ -31,6 +31,7 @@
     "test:v1:rls": "node scripts/test-v1-rls.mjs",
     "test:v1:integration": "node scripts/test-v1-integration.mjs",
     "test:sellers": "node scripts/test-sellers-rls.mjs",
+    "test:sellers:accounts": "node scripts/test-seller-accounts-rls.mjs",
     "test:sellers:auth": "node scripts/test-seller-invitation-return.mjs",
     "test:csv": "node scripts/test-csv.mjs",
     "check:ui:v1": "node scripts/check-ui-v1.mjs",

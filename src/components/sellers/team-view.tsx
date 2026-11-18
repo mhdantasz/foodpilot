@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { UserPlus, Tag, CalendarClock, DollarSign, Award, Package, TrendingUp } from 'lucide-react';
+import Link from 'next/link';
+import { UserPlus, Tag, CalendarClock, DollarSign, Award, Package, TrendingUp, KeyRound } from 'lucide-react';
 import type { TeamDashboard } from '@/lib/sellers/types';
 import { formatMoney } from '@/lib/money';
 import { StatCard, SectionCard } from '@/components/ui';
@@ -12,13 +13,19 @@ import { TeamWeekCloseModal } from './team-week-close-form';
 import { TeamWeeksList } from './team-weeks-list';
 import { TeamSalesList } from './team-sales-list';
 import { TeamProductsRanking } from './team-products-ranking';
+import { TeamLoginModal } from './team-login-modal';
 
-export function TeamView({ dashboard }: { dashboard: TeamDashboard }) {
+type SellerLogin = { seller_id: string; username: string; deleted: boolean };
+export function TeamView({ dashboard: sourceDashboard, logins = [] }: { dashboard: TeamDashboard; logins?: SellerLogin[] }) {
+  const deletedIds = new Set(logins.filter(login => login.deleted).map(login => login.seller_id));
+  const dashboard = { ...sourceDashboard, sellers: sourceDashboard.sellers.filter(seller => !deletedIds.has(seller.id)), offers: sourceDashboard.offers.filter(offer => !deletedIds.has(offer.seller_id)) };
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [isWeekModalOpen, setIsWeekModalOpen] = useState(false);
   const [targetSellerId, setTargetSellerId] = useState<string | undefined>(undefined);
   const [targetVariantId, setTargetVariantId] = useState<string | undefined>(undefined);
+  const handleOpenLoginModal = (sellerId?: string) => { setTargetSellerId(sellerId); setIsLoginModalOpen(true); };
 
   const handleOpenOfferModal = (sellerId?: string, variantId?: string) => {
     setTargetSellerId(sellerId);
@@ -44,6 +51,8 @@ export function TeamView({ dashboard }: { dashboard: TeamDashboard }) {
             <UserPlus size={18} aria-hidden="true" />
             Novo vendedor
           </button>
+          <button type="button" className="action-button secondary" onClick={() => handleOpenLoginModal()} disabled={!dashboard.sellers.some(seller => !seller.linked && seller.active)}><KeyRound size={18} aria-hidden="true" />Gerar login</button>
+          <Link className="action-button secondary" href="/produtos"><Package size={18} aria-hidden="true" />Cadastrar produto</Link>
           <button
             type="button"
             className="action-button secondary"
@@ -64,6 +73,8 @@ export function TeamView({ dashboard }: { dashboard: TeamDashboard }) {
           </button>
         </div>
       </div>
+
+      <p className="muted" style={{ marginBottom: 18 }}>Novos vendedores começam sem produtos. Cadastre os produtos no painel e configure as ofertas de cada vendedor para definir os preços e liberar as vendas.</p>
 
       {/* Cartões de Indicadores da Operação */}
       <div className="stats-grid">
@@ -111,6 +122,8 @@ export function TeamView({ dashboard }: { dashboard: TeamDashboard }) {
           timezone={dashboard.period.timezone}
           onOpenOfferModal={handleOpenOfferModal}
           onOpenWeekCloseModal={handleOpenWeekModal}
+          onOpenLoginModal={handleOpenLoginModal}
+          logins={logins}
         />
       </SectionCard>
 
@@ -236,6 +249,7 @@ export function TeamView({ dashboard }: { dashboard: TeamDashboard }) {
       </SectionCard>
 
       {/* Modais */}
+      {isLoginModalOpen && <TeamLoginModal sellers={dashboard.sellers.filter(seller => !seller.linked && seller.active)} initialSellerId={targetSellerId} onClose={() => setIsLoginModalOpen(false)} />}
       {isSellerModalOpen && <TeamSellerCreateModal
         isOpen={isSellerModalOpen}
         onClose={() => setIsSellerModalOpen(false)}

@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/auth/context';
 import { invitationReturnTo, authConfirmationUrl } from '@/lib/auth/return-to';
+import { sellerSignIn } from '@/lib/sellers/accounts';
 import { field, validateEmail, validatePassword, businessTypes, salesChannels, type FormState } from './validation';
 
 const unavailable = { error: 'O acesso ainda precisa ser configurado. Consulte as instruções do Supabase no projeto.' };
@@ -17,10 +18,20 @@ function callbackUrl() {
 export async function login(_state: FormState, data: FormData): Promise<FormState> {
   const email = field(data,'email').trim();
   const password = field(data,'password');
-  if (!validateEmail(email)) return { error: 'Digite um email válido.' };
+  const sellerLogin = !email.includes('@');
+  if (sellerLogin ? !/^[a-z0-9._-]{3,40}$/i.test(email) : !validateEmail(email)) return { error: 'Digite seu usuário de vendedor ou um email válido.' };
   if (!password || password.length > 128) return { error: 'Digite sua senha.' };
   const client = await createClient();
   if (!client) return unavailable;
+  if (sellerLogin) {
+    try {
+      const session = await sellerSignIn(email.toLowerCase(), password);
+      const { error } = await client.auth.setSession(session);
+      if (error) return { error: 'Não foi possível iniciar a sessão. Tente novamente.' };
+    } catch (error) { return { error: error instanceof Error ? error.message : 'Usuário ou senha incorretos.' }; }
+    revalidatePath('/', 'layout');
+    redirect('/vendedor');
+  }
   const { error } = await client.auth.signInWithPassword({ email, password });
   if (error && (!error.status || error.status>=500 || error.name==='AuthRetryableFetchError')) return {error:'Não foi possível conectar agora. Confira sua conexão e tente novamente.'};
   if (error) return { error: error.code === 'email_not_confirmed' ? 'Confirme seu email antes de entrar. Veja sua caixa de entrada.' : 'Email ou senha incorretos. Tente novamente.' };

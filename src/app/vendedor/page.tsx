@@ -21,7 +21,7 @@ export default async function VendedorPage({
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   // Vendedor requer requireUser somente e getSellerPortal, jamais requireBusiness
-  await requireUser();
+  await requireUser('/entrar-vendedor');
 
   const { from, to } = await searchParams;
   let portal: SellerPortal | null = null;

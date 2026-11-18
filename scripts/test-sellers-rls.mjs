@@ -8,7 +8,7 @@ const call=async(action,input={})=>(await db.query('select public.seller_operati
 async function check(name,task){await task();results.push(name);console.log('OK '+name);}
 const reject=task=>assert.rejects(task,error=>['22023','42501','23514','23505'].includes(error.code));
 try{
- await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,raw_user_meta_data jsonb);create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;grant usage on schema auth,public to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
+ await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key,raw_user_meta_data jsonb);create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;grant usage on schema auth,public to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
  for(const f of (await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile('supabase/migrations/'+f,'utf8'));
  const user=async()=>{const id=randomUUID();await db.query('insert into auth.users values($1,$2)',[id,'{}']);return id;};
  const owner=await user(),otherOwner=await user(),sellerA=await user(),sellerB=await user(),unlinked=await user();

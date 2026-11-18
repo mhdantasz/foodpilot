@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireBusiness } from '@/lib/auth/context';
 import { getTeamDashboard } from '@/lib/sellers/data';
+import { listSellerLogins } from '@/lib/sellers/accounts';
 import type { TeamDashboard } from '@/lib/sellers/types';
 import { PageHeader } from '@/components/ui';
 import { DateFilter } from '@/components/sellers/date-filter';
@@ -26,10 +27,11 @@ export default async function EquipePage({
 
   const { from, to } = await searchParams;
   let dashboard: TeamDashboard | null = null;
+  let logins: Awaited<ReturnType<typeof listSellerLogins>> = [];
   let error: string | null = null;
 
   try {
-    dashboard = await getTeamDashboard(from || undefined, to || undefined);
+    [dashboard, logins] = await Promise.all([getTeamDashboard(from || undefined, to || undefined), listSellerLogins()]);
   } catch (err) {
     error = err instanceof Error ? err.message : 'Não foi possível carregar os dados da equipe de vendedores.';
   }
@@ -61,7 +63,7 @@ export default async function EquipePage({
             calendarDays={dashboard.period.calendar_days}
             timezone={dashboard.period.timezone}
           />
-          <TeamView dashboard={dashboard} />
+          <TeamView dashboard={dashboard} logins={logins} />
         </>
       ) : null}
     </div>

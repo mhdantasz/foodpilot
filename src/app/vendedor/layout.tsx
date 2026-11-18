@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function VendedorLayout({ children }: { children: ReactNode }) {
   // Vendedor requer requireUser somente, jamais requireBusiness
-  const context = await requireUser();
+  const context = await requireUser('/entrar-vendedor');
   const seller = context.seller ?? (await getSellerAccess());
 
   return (

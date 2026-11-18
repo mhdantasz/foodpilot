@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { UserCheck, UserX, KeyRound, Copy, Check, LoaderCircle, Tag, CalendarClock, Store } from 'lucide-react';
+import { UserCheck, UserX, KeyRound, Copy, Check, LoaderCircle, Tag, CalendarClock, Store, Trash2 } from 'lucide-react';
 import type { Seller, SellerMetric, SellerOffer, SellerProductBySellerMetric } from '@/lib/sellers/types';
 import { formatMoney } from '@/lib/money';
 import { StatusBadge } from '@/components/ui';
 import { toggleSellerAction, createSellerInviteAction } from '@/app/(app)/equipe/actions';
+import { deleteSellerLoginAction } from '@/app/(app)/equipe/account-actions';
 
 export function TeamSellerList({
   sellers,
@@ -15,6 +16,8 @@ export function TeamSellerList({
   timezone = 'America/Manaus',
   onOpenOfferModal,
   onOpenWeekCloseModal,
+  onOpenLoginModal,
+  logins = [],
 }: {
   sellers: Seller[];
   metrics: SellerMetric[];
@@ -23,13 +26,30 @@ export function TeamSellerList({
   timezone?: string;
   onOpenOfferModal: (sellerId: string) => void;
   onOpenWeekCloseModal: (sellerId: string) => void;
+  onOpenLoginModal?: (sellerId: string) => void;
+  logins?: { seller_id: string; username: string; deleted: boolean }[];
 }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [invites, setInvites] = useState<Record<string, string>>({});
   const [copiedSellerId, setCopiedSellerId] = useState<string | null>(null);
   const [pendingToggles, setPendingToggles] = useState<Record<string, boolean>>({});
   const [pendingInvites, setPendingInvites] = useState<Record<string, boolean>>({});
+  const [pendingDeletes, setPendingDeletes] = useState<Record<string, boolean>>({});
   const [, startTransition] = useTransition();
+
+  const handleDeleteLogin = (seller: Seller) => {
+    if (!window.confirm(`Excluir o usuário de ${seller.name}? O acesso será bloqueado e o vendedor sairá da lista operacional. O histórico de vendas e pagamentos será preservado.`)) return;
+    setErrors(previous => ({ ...previous, [seller.id]: '' }));
+    setPendingDeletes(previous => ({ ...previous, [seller.id]: true }));
+    startTransition(async () => {
+      try {
+        const form = new FormData(); form.set('seller_id', seller.id);
+        const result = await deleteSellerLoginAction(form);
+        if (!result.ok) setErrors(previous => ({ ...previous, [seller.id]: result.message }));
+      } catch { setErrors(previous => ({ ...previous, [seller.id]: 'Não foi possível confirmar a exclusão. Atualize a lista antes de tentar novamente.' })); }
+      finally { setPendingDeletes(previous => ({ ...previous, [seller.id]: false })); }
+    });
+  };
 
   const handleToggle = (seller: Seller) => {
     const nextActive = !seller.active;
@@ -112,6 +132,7 @@ export function TeamSellerList({
         const productMetrics = sellerProducts.filter(product => product.seller_id === seller.id);
         const isTogglePending = pendingToggles[seller.id];
         const isInvitePending = pendingInvites[seller.id];
+        const managedLogin = logins.find(login => login.seller_id === seller.id && !login.deleted);
 
         return (
           <article key={seller.id} className="seller-card-item">
@@ -137,6 +158,8 @@ export function TeamSellerList({
                 )}
               </div>
             </div>
+
+            {managedLogin && <p className="muted">Usuário de acesso: <strong>{managedLogin.username}</strong></p>}
 
             {/* Métricas no período filtrado */}
             <div className="seller-metrics-row">
@@ -259,6 +282,8 @@ export function TeamSellerList({
 
             {/* Ações do vendedor */}
             <div className="seller-card-actions">
+              {!seller.linked && onOpenLoginModal && <button type="button" className="action-button" disabled={!seller.active} onClick={() => onOpenLoginModal(seller.id)}><KeyRound size={16} aria-hidden="true" />Gerar login</button>}
+              {managedLogin && <button type="button" className="action-button secondary" onClick={() => handleDeleteLogin(seller)} disabled={pendingDeletes[seller.id]} aria-busy={pendingDeletes[seller.id]}>{pendingDeletes[seller.id] ? <LoaderCircle className="loading-icon" size={16} /> : <Trash2 size={16} aria-hidden="true" />}{pendingDeletes[seller.id] ? 'Excluindo usuário…' : 'Excluir usuário'}</button>}
               <button
                 type="button"
                 className="action-button secondary"

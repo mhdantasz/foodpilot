@@ -26,9 +26,9 @@ export const getCurrentContext = cache(async () => {
   const seller = membership ? null : await getSellerAccess();
   return { user, profile: profileResult.data, membership, business, seller };
 });
-export async function requireUser() {
+export async function requireUser(loginPath: '/login' | '/entrar-vendedor' = '/login') {
   const context = await getCurrentContext();
-  if (!context) redirect('/login');
+  if (!context) redirect(loginPath);
   return context;
 }
 export async function requireBusiness() {

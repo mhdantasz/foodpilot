@@ -12,7 +12,7 @@ const options = {
   'esqueci-senha': { action: forgotPassword, button: 'Enviar link', busy: 'Enviando…' },
   'redefinir-senha': { action: resetPassword, button: 'Salvar nova senha', busy: 'Salvando…' },
 };
-export function AuthForm({ mode, returnTo }: { mode: Mode; returnTo?: string }) {
+export function AuthForm({ mode, returnTo, sellerOnly = false }: { mode: Mode; returnTo?: string; sellerOnly?: boolean }) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,14 +22,14 @@ export function AuthForm({ mode, returnTo }: { mode: Mode; returnTo?: string }) 
   const invitationQuery = returnTo ? `?convite=${encodeURIComponent(new URL(returnTo, 'https://local.invalid').searchParams.get('code') || '')}` : '';
   return <form action={action} noValidate className="auth-form"><input type="hidden" name="return_to" value={returnTo || ''} /><fieldset disabled={pending || state.success}>
     {mode === 'cadastro' && <label>Nome<input value={fullName} onChange={e => setFullName(e.target.value)} name="full_name" autoComplete="name" required minLength={2} maxLength={100} placeholder="Como podemos chamar você?" /></label>}
-    {mode !== 'redefinir-senha' && <label>Email<input value={email} onChange={e => setEmail(e.target.value)} name="email" type="email" autoComplete="email" required maxLength={254} placeholder="voce@exemplo.com" /></label>}
+    {mode !== 'redefinir-senha' && <label>{mode === 'login' ? 'Usuário ou email' : 'Email'}<input value={email} onChange={e => setEmail(e.target.value)} name="email" type={mode === 'login' ? 'text' : 'email'} autoComplete={mode === 'login' ? 'username' : 'email'} autoCapitalize="none" spellCheck={false} required maxLength={254} placeholder={mode === 'login' ? 'Seu usuário ou email' : 'voce@exemplo.com'} /></label>}
     {mode !== 'esqueci-senha' && <label>{mode === 'redefinir-senha' ? 'Nova senha' : 'Senha'}<input value={password} onChange={e => setPassword(e.target.value)} name="password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={mode === 'login' ? 1 : 8} maxLength={128} aria-describedby={mode === 'login' ? undefined : 'password-hint'} /></label>}
     {(mode === 'cadastro' || mode === 'redefinir-senha') && <><p id="password-hint" className="field-hint">Use pelo menos 8 caracteres.</p><label>Confirmar senha<input value={confirmation} onChange={e => setConfirmation(e.target.value)} name="confirmation" type="password" autoComplete="new-password" required maxLength={128} /></label></>}
-    {mode === 'login' && <Link className="auth-forgot" href="/esqueci-senha">Esqueci minha senha</Link>}
+    {mode === 'login' && !sellerOnly && <Link className="auth-forgot" href="/esqueci-senha">Esqueci minha senha</Link>}
     {state.error && <p className="form-message error" role="alert">{state.error}</p>}
     {state.message && <p className="form-message success" role="status">{state.message}</p>}
     <button className="action-button" type="submit" disabled={pending || state.success} aria-busy={pending}>{pending ? <LoaderCircle className="loading-icon" size={18} /> : <ArrowRight size={18} />}{pending ? option.busy : option.button}</button>
-  </fieldset>{mode === 'login' ? <p className="auth-switch">Ainda não tem conta? <Link href={`/cadastro${invitationQuery}`}>Criar conta</Link></p> : <p className="auth-switch"><Link href={`/login${invitationQuery}`}>Voltar para entrar</Link></p>}</form>;
+  </fieldset>{sellerOnly ? <p className="auth-switch">Use o usuário e a senha fornecidos pelo gerente. Se precisar de ajuda, fale com ele.</p> : mode === 'login' ? <p className="auth-switch">Ainda não tem conta? <Link href={`/cadastro${invitationQuery}`}>Criar conta</Link></p> : <p className="auth-switch"><Link href={`/login${invitationQuery}`}>Voltar para entrar</Link></p>}</form>;
 }
 export function LogoutButton() {
   const [state, action, pending] = useActionState(logout, initial);
