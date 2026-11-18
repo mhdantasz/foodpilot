@@ -1,0 +1,1 @@
+Confirmamos a leitura dos arquivos README.md e package.json, identificando o framework Next.js e o banco de dados Supabase (PostgreSQL), e certificamos que nenhum segredo, arquivo de ambiente, dado de autenticação ou dado de clientes foi lido.

@@ -1,0 +1,553 @@
+/* Estilos dedicados ao módulo de vendedores e equipe */
+
+.seller-app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+  color: var(--color-ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.seller-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-line);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.seller-header-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.seller-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.seller-user-info {
+  text-align: right;
+}
+
+.seller-user-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--color-ink);
+}
+
+.seller-user-role {
+  display: block;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.seller-main {
+  flex: 1;
+  padding: 20px 16px 40px;
+}
+
+.seller-container {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.seller-footer {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--color-muted);
+  font-size: 12px;
+  border-top: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+
+.seller-footer-install {
+  margin-top: 16px;
+}
+
+/* Telas do vendedor: corpo >= 16px */
+.seller-sale-section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.seller-sale-heading {
+  margin-bottom: 16px;
+}
+
+.seller-sale-heading h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.seller-sale-heading p {
+  font-size: 14px;
+  color: var(--color-muted);
+  margin-top: 4px;
+}
+
+/* Itens da venda rápida */
+.seller-offer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 640px) {
+  .seller-offer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.seller-offer-card {
+  background: var(--color-background);
+  border: 2px solid var(--color-line);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+
+.seller-offer-card.has-quantity {
+  border-color: var(--color-primary);
+  background: var(--primary-soft);
+}
+
+.seller-offer-info strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--color-ink);
+}
+
+.seller-offer-info .seller-offer-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-top: 4px;
+}
+
+.seller-offer-info .seller-offer-commission {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--color-success);
+  background: var(--surface-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.seller-quantity-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.seller-qty-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 20px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  touch-action: manipulation;
+}
+
+.seller-qty-btn:active {
+  background: var(--surface-soft);
+}
+
+.seller-qty-value {
+  min-width: 32px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* Painel de fechamento do pedido do vendedor */
+.seller-sale-summary {
+  background: var(--surface-soft);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.seller-summary-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.seller-summary-box span {
+  display: block;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.seller-summary-box strong {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin-top: 2px;
+}
+
+.seller-summary-box.commission strong {
+  color: var(--color-success);
+}
+
+.seller-payment-selector legend {
+  font-size: 14px;
+  font-weight: 650;
+  margin-bottom: 8px;
+  color: var(--color-ink);
+}
+
+.seller-payment-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.seller-payment-btn {
+  min-height: 48px;
+  border-radius: 9px;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 4px;
+  touch-action: manipulation;
+}
+
+.seller-payment-btn[aria-pressed="true"] {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.seller-machine-notice {
+  font-size: 12px;
+  color: var(--color-muted);
+  background: var(--information-soft);
+  color: var(--color-information);
+  padding: 10px 12px;
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.seller-confirm-btn {
+  min-height: 48px;
+  font-size: 16px;
+  font-weight: 700;
+  width: 100%;
+}
+
+/* Filtro de datas */
+.date-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  margin-bottom: 20px;
+}
+
+.date-filter-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-filter-inputs label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.date-filter-inputs input[type="date"] {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-background);
+  color: var(--color-ink);
+  font-size: 14px;
+}
+
+.date-filter-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.date-preset-btn {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-line);
+  background: var(--surface-soft);
+  color: var(--color-ink);
+}
+
+.date-filter-caption {
+  font-size: 12px;
+  color: var(--color-muted);
+  margin-left: auto;
+  align-self: center;
+}
+
+/* Gerente: layout e tabelas */
+.team-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.team-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .team-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.seller-action-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.seller-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(32, 51, 42, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.seller-modal-card {
+  width: min(100%, 540px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.seller-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.seller-modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Cartão de vendedor na lista */
+.seller-list-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.seller-card-item {
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 18px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.seller-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.seller-card-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.seller-card-header p {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.seller-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.seller-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  background: var(--surface-soft);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+@media (max-width: 640px) {
+  .seller-metrics-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.seller-metric-item span {
+  display: block;
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.seller-metric-item strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.seller-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-line);
+}
+
+/* Tabela de vendas e fechamentos */
+.seller-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.seller-table th,
+.seller-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.seller-table th {
+  font-size: 11px;
+  color: var(--color-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.seller-table tr:hover td {
+  background: var(--surface-soft);
+}
+
+/* Caixa de comissão em destaque */
+.commission-preview-box {
+  background: var(--primary-soft);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  color: var(--color-primary);
+  line-height: 1.5;
+}
+
+.commission-preview-box strong {
+  color: var(--color-success);
+}
+
+/* Link de convite exibido */
+.invite-code-box {
+  background: var(--surface-soft);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.invite-code-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.invite-code-input {
+  flex: 1;
+  font-family: monospace;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: white;
+}

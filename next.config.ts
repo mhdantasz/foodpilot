@@ -13,6 +13,9 @@ const config: NextConfig = {
         { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
         { key: 'Content-Security-Policy', value: "default-src 'none'; script-src 'self'; connect-src 'self'" },
       ] },
+      { source: '/convite', headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }, { key: 'Cache-Control', value: 'private, no-store' }] },
+      { source: '/login', headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }] },
+      { source: '/cadastro', headers: [{ key: 'Referrer-Policy', value: 'no-referrer' }] },
     ];
   },
 };

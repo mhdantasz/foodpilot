@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getSellerAccess } from '@/lib/sellers/data';
 
 // cache do React deduplica somente nesta renderização/requisição, nunca entre usuários.
 export const getCurrentContext = cache(async () => {
@@ -22,7 +23,8 @@ export const getCurrentContext = cache(async () => {
     if (result.error) throw new Error('Não foi possível carregar seu negócio. Tente novamente.');
     business = result.data;
   }
-  return { user, profile: profileResult.data, membership, business };
+  const seller = membership ? null : await getSellerAccess();
+  return { user, profile: profileResult.data, membership, business, seller };
 });
 export async function requireUser() {
   const context = await getCurrentContext();
@@ -31,10 +33,10 @@ export async function requireUser() {
 }
 export async function requireBusiness() {
   const context = await requireUser();
-  if (!context.business || !context.membership) redirect('/onboarding');
+  if (!context.business || !context.membership) redirect(context.seller ? '/vendedor' : '/onboarding');
   return { ...context, business: context.business, membership: context.membership };
 }
 export async function redirectAuthenticated() {
   const context = await getCurrentContext();
-  if (context) redirect(context.business ? '/' : '/onboarding');
+  if (context) redirect(context.business ? '/' : context.seller ? '/vendedor' : '/onboarding');
 }

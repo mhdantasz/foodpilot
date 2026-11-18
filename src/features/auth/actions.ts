@@ -1,16 +1,18 @@
 'use server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/auth/context';
+import { invitationReturnTo, authConfirmationUrl } from '@/lib/auth/return-to';
 import { field, validateEmail, validatePassword, businessTypes, salesChannels, type FormState } from './validation';
 
 const unavailable = { error: 'O acesso ainda precisa ser configurado. Consulte as instruções do Supabase no projeto.' };
 function callbackUrl() {
   const raw = process.env.APP_URL || 'http://localhost:3000';
-  const url = new URL(raw);
-  if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new Error('APP_URL inválida');
-  return `${url.origin}/auth/confirm`;
+  // Existing Supabase email templates append ?token_hash=... to this URL.
+  // Keep it query-free; the same-device invitation travels in an HttpOnly cookie.
+  return authConfirmationUrl(raw);
 }
 export async function login(_state: FormState, data: FormData): Promise<FormState> {
   const email = field(data,'email').trim();
@@ -23,7 +25,7 @@ export async function login(_state: FormState, data: FormData): Promise<FormStat
   if (error && (!error.status || error.status>=500 || error.name==='AuthRetryableFetchError')) return {error:'Não foi possível conectar agora. Confira sua conexão e tente novamente.'};
   if (error) return { error: error.code === 'email_not_confirmed' ? 'Confirme seu email antes de entrar. Veja sua caixa de entrada.' : 'Email ou senha incorretos. Tente novamente.' };
   revalidatePath('/', 'layout');
-  redirect('/');
+  redirect(invitationReturnTo(field(data, 'return_to')) || '/');
 }
 export async function signup(_state: FormState, data: FormData): Promise<FormState> {
   const fullName = field(data,'full_name').trim();
@@ -35,11 +37,15 @@ export async function signup(_state: FormState, data: FormData): Promise<FormSta
   if (invalid) return { error: invalid };
   const client = await createClient();
   if (!client) return unavailable;
+  const returnTo = invitationReturnTo(field(data, 'return_to'));
   const { data: result, error } = await client.auth.signUp({ email, password, options: { data: { full_name: fullName }, emailRedirectTo: callbackUrl() } });
   if (error) return { error: error.code === 'over_email_send_rate_limit' || error.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos e tente novamente.' : 'Não foi possível criar a conta. Se já tem uma conta, entre ou recupere sua senha.' };
+  const cookieStore = await cookies();
+  if (returnTo) cookieStore.set('pending_seller_invitation', returnTo, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24 * 7 });
+  else cookieStore.delete('pending_seller_invitation');
   if (!result.session) return { success: true, message: 'Confira sua caixa de entrada para confirmar o email. Se já possui uma conta, você pode entrar ou recuperar a senha.' };
   revalidatePath('/', 'layout');
-  redirect('/onboarding');
+  redirect(returnTo || '/onboarding');
 }
 export async function forgotPassword(_state: FormState, data: FormData): Promise<FormState> {
   const email = field(data,'email').trim();
@@ -70,11 +76,13 @@ export async function logout(): Promise<FormState> {
   if (!client) redirect('/login');
   const { error } = await client.auth.signOut();
   if (error) return { error: 'Não foi possível sair agora. Tente novamente.' };
+  (await cookies()).delete('pending_seller_invitation');
   revalidatePath('/', 'layout');
   redirect('/login');
 }
 export async function completeOnboarding(_state: FormState, data: FormData): Promise<FormState> {
-  await requireUser();
+  const context = await requireUser();
+  if (context.seller) return { error: 'Seu acesso é de vendedor. Entre na sua área de vendas.' };
   const name = field(data,'name').trim();
   const businessType = field(data,'business_type');
   const channel = field(data,'sales_channel');

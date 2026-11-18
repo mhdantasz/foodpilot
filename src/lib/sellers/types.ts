@@ -1,0 +1,14 @@
+export type SellerActionResult = { ok: boolean; message: string; inviteCode?: string; id?: string };
+export type SellerAccess = { seller_id: string; name: string; active: boolean };
+export type Seller = { id: string; name: string; location: string; active: boolean; linked: boolean; created_at: string };
+export type SellerOffer = { id: string; seller_id: string; variant_id: string; product_name: string; variant_name: string; price_cents: number; commission_cents: number; active: boolean };
+export type SellerSaleItem = { product_name: string; variant_name: string; quantity: number; unit_price_cents: number; unit_commission_cents: number; total_cents: number; commission_cents: number };
+export type SellerSale = { id: string; seller_id: string; seller_name: string; sold_at: string; payment_method: string; total_cents: number; commission_cents: number; status: 'active'|'cancelled'; cancellation_reason: string|null; closed_week_id: string|null; items: SellerSaleItem[] };
+export type SellerWeek = { id: string; seller_id: string; seller_name: string; starts_on: string; ends_on: string; total_cents: number; commission_cents: number; sale_count: number; status: 'closed'|'paid'; closed_at: string; paid_at: string|null };
+export type SellerMetric = { seller_id: string; seller_name: string; revenue_cents: number; commission_cents: number; units: number; sale_count: number; active_days: number; calendar_days: number; units_per_calendar_day: number; units_per_active_day: number; cost_cents?: number; result_cents?: number };
+export type SellerProductMetric = { product_id: string; variant_id: string; product_name: string; variant_name: string; units: number; revenue_cents: number; commission_cents: number; active_days: number; calendar_days: number; units_per_calendar_day: number; units_per_active_day: number };
+export type SellerProductBySellerMetric = SellerProductMetric & { seller_id: string; seller_name: string };
+export type SellerPeriod = { from: string; to: string; calendar_days: number; timezone: string };
+export type SellerVariantOption = { id: string; product_name: string; variant_name: string; sale_price_cents: number };
+export type TeamDashboard = { period: SellerPeriod; sellers: Seller[]; offers: SellerOffer[]; sales: SellerSale[]; weeks: SellerWeek[]; metrics: SellerMetric[]; products: SellerProductMetric[]; seller_products: SellerProductBySellerMetric[]; variants: SellerVariantOption[]; totals: { revenue_cents: number; commission_cents: number; cost_cents: number; result_cents: number; units: number; sale_count: number }; history_limit: number };
+export type SellerPortal = { seller: SellerAccess|null; period: SellerPeriod; offers: SellerOffer[]; sales: SellerSale[]; weeks: SellerWeek[]; metrics: SellerMetric|null; products: SellerProductMetric[]; history_limit: number };

@@ -12,14 +12,15 @@ const options = {
   'esqueci-senha': { action: forgotPassword, button: 'Enviar link', busy: 'Enviando…' },
   'redefinir-senha': { action: resetPassword, button: 'Salvar nova senha', busy: 'Salvando…' },
 };
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({ mode, returnTo }: { mode: Mode; returnTo?: string }) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
   const option = options[mode];
   const [state, action, pending] = useActionState(option.action, initial);
-  return <form action={action} noValidate className="auth-form"><fieldset disabled={pending || state.success}>
+  const invitationQuery = returnTo ? `?convite=${encodeURIComponent(new URL(returnTo, 'https://local.invalid').searchParams.get('code') || '')}` : '';
+  return <form action={action} noValidate className="auth-form"><input type="hidden" name="return_to" value={returnTo || ''} /><fieldset disabled={pending || state.success}>
     {mode === 'cadastro' && <label>Nome<input value={fullName} onChange={e => setFullName(e.target.value)} name="full_name" autoComplete="name" required minLength={2} maxLength={100} placeholder="Como podemos chamar você?" /></label>}
     {mode !== 'redefinir-senha' && <label>Email<input value={email} onChange={e => setEmail(e.target.value)} name="email" type="email" autoComplete="email" required maxLength={254} placeholder="voce@exemplo.com" /></label>}
     {mode !== 'esqueci-senha' && <label>{mode === 'redefinir-senha' ? 'Nova senha' : 'Senha'}<input value={password} onChange={e => setPassword(e.target.value)} name="password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={mode === 'login' ? 1 : 8} maxLength={128} aria-describedby={mode === 'login' ? undefined : 'password-hint'} /></label>}
@@ -28,7 +29,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     {state.error && <p className="form-message error" role="alert">{state.error}</p>}
     {state.message && <p className="form-message success" role="status">{state.message}</p>}
     <button className="action-button" type="submit" disabled={pending || state.success} aria-busy={pending}>{pending ? <LoaderCircle className="loading-icon" size={18} /> : <ArrowRight size={18} />}{pending ? option.busy : option.button}</button>
-  </fieldset>{mode === 'login' ? <p className="auth-switch">Ainda não tem conta? <Link href="/cadastro">Criar conta</Link></p> : <p className="auth-switch"><Link href="/login">Voltar para entrar</Link></p>}</form>;
+  </fieldset>{mode === 'login' ? <p className="auth-switch">Ainda não tem conta? <Link href={`/cadastro${invitationQuery}`}>Criar conta</Link></p> : <p className="auth-switch"><Link href={`/login${invitationQuery}`}>Voltar para entrar</Link></p>}</form>;
 }
 export function LogoutButton() {
   const [state, action, pending] = useActionState(logout, initial);
